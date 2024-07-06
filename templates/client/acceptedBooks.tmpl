@@ -1,0 +1,21 @@
+{{template "base" .}}
+
+{{define "body"}}
+<div class="bg-[#f1faee] max-w-7xl p-6 mx-auto rounded-lg my-12">
+   <h1 class="text-5xl text-center font-extrabold text-[#e63946] mb-12">Your Books</h1>
+   <ul class="text-center">
+      {{range .}}
+      <li class="mb-9">
+         <strong class="text-xl text-[#1d3557] font-extrabold">Title:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.Title}}</span><br>
+         <strong class="text-xl text-[#1d3557] font-extrabold">Author:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.Author}}</span><br>
+         <strong class="text-xl text-[#1d3557] font-extrabold">Genre:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.Genre}}</span><br> 
+           
+         <span class="request">
+            <strong> Status: </strong>{{.Status}}
+         </span>
+      </li>
+      {{end}}
+   </ul>
+   <h1 class="absolute top-0 left-0 pl-4 mt-4 mr-4 text-4xl font-bold text-[#1d3557]"><a href="/home">Librarri</a></h1>
+</div>
+{{end}}

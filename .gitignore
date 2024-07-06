@@ -1,0 +1,4 @@
+mvc
+vendor/
+.env
+d.sql

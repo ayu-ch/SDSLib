@@ -1,0 +1,21 @@
+{{template "base" .}}
+
+{{define "body"}}
+ <div class="bg-[#f1faee] max-w-7xl p-6 mx-auto rounded-lg my-12">
+      <h1 class="text-5xl text-center font-extrabold text-[#e63946] mb-12">Books you have:</h1>
+      <form action="/home/return" method="POST">
+      <ul class="text-center">
+        {{range .Requests}}
+            <li class="mb-9">
+                <strong class="text-xl text-[#1d3557] font-extrabold ">Book ID:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.BookID}}</span><br>
+                <strong class="text-xl text-[#1d3557] font-extrabold ">Book Name:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.Title}}</span><br>
+                <strong class="text-xl text-[#1d3557] font-extrabold ">Date:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.RequestDate}}</span><br> 
+                <input type="checkbox" name="selectedRequests" value="{{.RequestID}}">    
+            </li>
+          {{end}}
+      </ul>
+      <div class="max-w-sm mx-auto">
+        <button class="w-full bg-[#a8dadc] text-gray-700 rounded-md p-2 font-extrabold text-xl text-[#1D3557]" type="submit">Return Books</button>
+      </div>
+    <h1 class="absolute top-0 left-0 pl-4 mt-4 mr-4 text-4xl font-bold text-[#1d3557]"><a href="/home">SDSLib</a></h1>
+{{end}}

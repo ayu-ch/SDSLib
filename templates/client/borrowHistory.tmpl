@@ -1,0 +1,19 @@
+{{template "base" .}}
+
+{{define "body"}}
+   <div class="bg-[#f1faee] max-w-7xl p-6 mx-auto rounded-lg my-12">
+    <h1 class="text-5xl text-center font-extrabold text-[#e63946] mb-12">Borrowing History</h1>
+    <form action="/home/return" method="POST">
+      <ul class="text-center">
+        {{range .History}}
+        <li class="mb-9">
+          <strong class="text-xl text-[#1d3557] font-extrabold ">Book ID:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.BookID}}</span><br>
+          <strong class="text-xl text-[#1d3557] font-extrabold ">Book Name:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.Title}}</span><br>
+          <strong class="text-xl text-[#1d3557] font-extrabold ">Request ID:</strong><span class="text-xl text-[#457B9D] font-bold"> {{.RequestID}}</span><br>
+          
+        </li>
+        {{end}}
+      </ul>
+      
+<h1 class="absolute top-0 left-0 pl-4 mt-4 mr-4 text-4xl font-bold text-[#1d3557]"><a href="/home">SDSLib</a></h1>
+{{end}}

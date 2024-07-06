@@ -1,0 +1,41 @@
+{{template "base" .}}
+
+{{define "body"}}
+
+<div class="bg-[#f1faee] max-w-7xl p-6 mx-auto rounded-lg my-12">
+    <h1 class="text-5xl text-center font-extrabold text-[#e63946] mb-12">Accept Requests</h1>
+    <ul class="text-center">
+        {{range .}}
+        <li class="mb-9">
+            <strong class="text-xl text-[#1d3557] font-extrabold">Book ID:</strong>
+            <span class="text-xl text-[#457B9D] font-bold">{{.RequestedBookID}}</span>
+            <br />
+            <strong class="text-xl text-[#1d3557] font-extrabold">Book Name:</strong>
+            <span class="text-xl text-[#457B9D] font-bold">{{.Title}}</span>
+            <br />
+            <strong class="text-xl text-[#1d3557] font-extrabold">User ID:</strong>
+            <span class="text-xl text-[#457B9D] font-bold">{{.UserID}}</span>
+            <br />
+            <strong class="text-xl text-[#1d3557] font-extrabold">User Name:</strong>
+            <span class="text-xl text-[#457B9D] font-bold">{{.Username}}</span>
+            <br />
+            <strong class="text-xl text-[#1d3557] font-extrabold">Date:</strong>
+            <span class="text-xl text-[#457B9D] font-bold">{{.RequestDate }}</span>
+            <br />
+            <form action="/admin/requests/accept" method="POST" class="inline">
+                <input type="hidden" name="requestID" value="{{.RequestID}}" />
+                <button class="my-2 mx-2 bg-green-500 text-white rounded-md px-4 py-2 font-bold" type="submit">Accept</button>
+            </form>
+            <form action="/admin/requests/deny" method="POST" class="inline">
+                <input type="hidden" name="requestID" value="{{.RequestID}}" />
+                <button class="my-2 mx-2 bg-red-500 text-white rounded-md px-4 py-2 font-bold" type="submit">Deny</button>
+            </form>
+        </li>
+        {{end}}
+    </ul>
+    <h1 class="absolute top-0 left-0 pl-4 mt-4 mr-4 text-4xl font-bold text-[#1d3557]">
+    <a href="/admin">SDSLib</a>
+  </h1>
+</div>
+
+{{end}}
