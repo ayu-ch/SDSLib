@@ -30,3 +30,6 @@ CREATE TABLE IF NOT EXISTS BookRequests (
     FOREIGN KEY (BookID) REFERENCES Books(BookID)
 );
 
+
+INSERT INTO User (Username, Pass, Role)
+VALUES ('admin', '$2a$05$SutXVDSdiLxds./9oktZseaWfYdNn0PkWpSw4hVQ/gzt7VbPVfZ/W', 'Admin');

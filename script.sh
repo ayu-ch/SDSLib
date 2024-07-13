@@ -1,36 +1,33 @@
 #!/bin/bash
 
+
 chmod +x ./start.sh
 
 UP_SQL="migrations/0001_initial_schema.up.sql"
-DOWN_SQL="migrations/0001_initial_schema.down.sql"
 
-echo "Please enter your MySQL username: "
-read username
+db_host="db"
+db_username="${DB_USERNAME:-username}"
+db_password="${DB_PASSWORD:-password}"
+db_name="${DB_NAME:-Library}"
 
-echo "Please enter your MySQL password: "
-read -s password
+# until mysql -h"$db_host" -u"$db_username" -p"$db_password" -e "SHOW DATABASES;"; do
+#   >&2 echo "MySQL is unavailable - sleeping"
+#   sleep 1
+# done
 
-echo "Please enter your MySQL DB name: "
-read db
-
-mysql -u"$username" -p"$password" < $UP_SQL
-
-echo "Enter Secret key for JWT: "
-read -s secret
+mysql -h"$db_host" -u"$db_username" -p"$db_password" "$db_name" < "$UP_SQL"
 
 cat << EOF > .env
-DB_USERNAME="$username"
-DB_PASSWORD="$password"
-DB_HOST="127.0.0.1:3306"
-DB_NAME="$db"
-JWT_SECRET="$secret"
+DB_USERNAME=$db_username
+DB_PASSWORD=$db_password
+DB_HOST=$db_host:3306
+DB_NAME=$db_name
+JWT_SECRET="secret"
 EOF
 
+
+go mod download
 go mod vendor
+# echo "To setup admin Username and password:"
+# go run admin.go
 
-echo "To setup admin Username and password:"
-go run admin.go
-
-echo "You have successfully setup SDSLib!"
-echo "To start the LMS, run the 'start.sh' script"

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"fmt"
 	"log"
@@ -24,14 +23,11 @@ func main() {
 	}
 	defer db.Close()
 
-	reader := bufio.NewReader(os.Stdin)
+	adminUsername := os.Args[1]
 
-	fmt.Print("Enter admin username: ")
-	adminUsername, _ := reader.ReadString('\n')
+	adminPassword := os.Args[2]
+
 	adminUsername = strings.TrimSpace(adminUsername)
-
-	fmt.Print("Enter admin password: ")
-	adminPassword, _ := reader.ReadString('\n')
 	adminPassword = strings.TrimSpace(adminPassword)
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
