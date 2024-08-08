@@ -3,7 +3,6 @@ package controller
 import (
 	"log"
 	"net/http"
-    // "strconv"
 	"github.com/ayu-ch/SDSLib/pkg/models"
 	"github.com/ayu-ch/SDSLib/pkg/views"
 )
@@ -43,7 +42,7 @@ func ChangePrivilegesPage(w http.ResponseWriter, r *http.Request) {
 
 func AcceptUser(w http.ResponseWriter, r *http.Request) {
 	UserID := r.FormValue("UserID")
-    log.Printf("UserID:%s",r.
+    log.Printf("%s",UserID)
 	db, err := models.Connection()
 	if err != nil {
 		log.Printf("Error connecting to the database: %s", err)
@@ -52,7 +51,7 @@ func AcceptUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	_, err = db.Exec("UPDATE User SET AdminRequest='Accepted' AND Role='Admin' WHERE UserID=?", UserID)
+	_, err = db.Exec("UPDATE User SET AdminRequest='Accepted', Role='Admin' WHERE UserID=?", UserID)
 	if err != nil {
 		log.Printf("Error updating user admin request: %s", err)
 		sendAlert(w, "Error updating user admin request")

@@ -1,45 +1,44 @@
 {{template "base" .}}
-
 {{define "body"}}
 <div class="bg-[#f1faee] max-w-7xl p-6 mx-auto rounded-lg my-12">
-  <h1 class="text-5xl text-center font-extrabold text-[#e63946] mb-12">
-    List of Users
-  </h1>
-  <ul class="text-center">
-    {{range .}}
-    <li class="mb-9">
-      <strong class="text-xl text-[#1d3557] font-extrabold">UserID:</strong><span class="text-xl text-[#457B9D] font-bold">{{.UserID}}</span><br />
-      <strong class="text-xl text-[#1d3557] font-extrabold">Username:</strong><span class="text-xl text-[#457B9D] font-bold">{{.Username}}</span><br />
-      <strong class="text-xl text-[#1d3557] font-extrabold">Role:</strong><span class="text-xl font-bold {{.Role}}">{{.Role}}</span><br />
-      <form action="/admin/users/accept" method="POST" class="inline">
-        <input type="hidden" name="userID" value="{{.UserID}}" />
-        <button class="my-2 mx-2 bg-green-500 text-white rounded-md px-4 py-2 font-bold" type="submit">Accept</button>
-      </form>
-      <form action="/admin/users/deny" method="POST" class="inline">
-        <input type="hidden" name="userID" value="{{.UserID}}" />
-        <button class="my-2 mx-2 bg-red-500 text-white rounded-md px-4 py-2 font-bold" type="submit">Deny</button>
-      </form>
-    </li>
-    {{end}}
-  </ul>
- <h1 class="absolute top-0 left-0 pl-4 mt-4 mr-4 text-4xl font-bold text-[#1d3557]">
-    <a href="/admin">SDSLib</a>
-  </h1>
+   <h1 class="text-5xl text-center font-extrabold text-[#e63946] mb-12">
+      List of Users
+   </h1>
+   <ul class="text-center">
+      {{range .}}
+      <li class="mb-9">
+         <strong class="text-xl text-[#1d3557] font-extrabold">UserID:</strong><span class="text-xl text-[#457B9D] font-bold">{{.UserID}}</span><br />
+         <strong class="text-xl text-[#1d3557] font-extrabold">Username:</strong><span class="text-xl text-[#457B9D] font-bold">{{.Username}}</span><br />
+         <strong class="text-xl text-[#1d3557] font-extrabold">Role:</strong><span class="text-xl font-bold {{.Role}}">{{.Role}}</span><br />
+         <form action="/admin/users/accept" method="POST" class="inline">
+            <input type="hidden" name="UserID" value="{{.UserID}}" />
+            <button class="my-2 mx-2 bg-green-500 text-white rounded-md px-4 py-2 font-bold" type="submit">Accept</button>
+         </form>
+         <form action="/admin/users/deny" method="POST" class="inline">
+            <input type="hidden" name="userID" value="{{.UserID}}" />
+            <button class="my-2 mx-2 bg-red-500 text-white rounded-md px-4 py-2 font-bold" type="submit">Deny</button>
+         </form>
+      </li>
+      {{end}}
+   </ul>
+   <h1 class="absolute top-0 left-0 pl-4 mt-4 mr-4 text-4xl font-bold text-[#1d3557]">
+      <a href="/admin">SDSLib</a>
+   </h1>
 </div>
 <style>
-  * {
-    font-family: "Poppins", sans-serif;
-  }
+   * {
+   font-family: "Poppins", sans-serif;
+   }
 </style>
 <style>
-  .Admin {
-    color: green;
-  }
-  .Client {
-    color: orange;
-  }
-  .invisible {
-    display: none;
-  }
+   .Admin {
+   color: green;
+   }
+   .Client {
+   color: orange;
+   }
+   .invisible {
+   display: none;
+   }
 </style>
 {{end}}

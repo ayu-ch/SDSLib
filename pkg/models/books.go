@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"strconv"
-	// "strings"
 	"database/sql"
 	"log"
 	"github.com/ayu-ch/SDSLib/pkg/types"
@@ -17,7 +16,6 @@ func AddBook(book types.Books) error {
 	}
 	defer db.Close()
 
-	// Check if the book already exists
 	exists, err := bookExists(db, book.Title)
 	if err != nil {
 		return fmt.Errorf("error checking if book exists: %s", err)
@@ -26,7 +24,6 @@ func AddBook(book types.Books) error {
 		return fmt.Errorf("a book with the title '%s' already exists", book.Title)
 	}
 
-	// Insert the new book
 	query := "INSERT INTO Books (Title, Author, Genre, Quantity) VALUES (?, ?, ?, ?)"
 	_, err = db.Exec(query, book.Title, book.Author, book.Genre, book.Quantity)
 	if err != nil {

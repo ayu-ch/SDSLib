@@ -88,7 +88,6 @@ func SignupPage(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("name")
 		password := r.FormValue("password")
 
-		// Validate the password length
 		if len(password) < 5 {
 			sendAlert(w, "Password must be at least 5 characters.")
 			return
@@ -100,7 +99,7 @@ func SignupPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/login", http.StatusFound)
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
 
@@ -152,7 +151,7 @@ func AdminLoginPage(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{
 			Name:  "token",
 			Value: tokenString,
-			Path:  "/", // Path to set cookie on
+			Path:  "/", 
 		})
 
 		http.Redirect(w, r, "/admin", http.StatusFound)

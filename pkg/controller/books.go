@@ -23,7 +23,6 @@ func AddBookPage(w http.ResponseWriter, r *http.Request) {
 		genre := r.FormValue("genre")
 		quantity := r.FormValue("quantity")
 
-		// Convert quantity to int
 		quantityInt, err := strconv.Atoi(quantity)
 		if err != nil {
 			sendAlert(w, "Invalid quantity")
@@ -92,14 +91,12 @@ func AcceptRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	// Update request status to 'Accepted' and set AcceptDate
 	_, err = db.Exec("UPDATE BookRequests SET Status='Accepted', AcceptDate = NOW() WHERE RequestID=?", requestID)
 	if err != nil {
 		sendAlert(w, "Error updating request status")
 		return
 	}
 
-	// Get BookID from the request
 	var bookID int
 	err = db.QueryRow("SELECT BookID FROM BookRequests WHERE RequestID = ?", requestID).Scan(&bookID)
 	if err != nil {
@@ -107,7 +104,6 @@ func AcceptRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update Books quantity (decrease by 1)
 	_, err = db.Exec("UPDATE Books SET Quantity = Quantity - 1 WHERE BookID=?", bookID)
 	if err != nil {
 		sendAlert(w, "Error updating book quantity")
