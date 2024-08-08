@@ -24,8 +24,8 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		tmpl := views.Login()
 		err := tmpl.ExecuteTemplate(w, "base", nil)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Printf("Error executing login template: %v", err)
+			sendAlert(w, "Error loading page. Please try again.")
 		}
 		return
 	}
@@ -39,7 +39,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		user, err := models.Login(username, password)
 		if err != nil {
 			log.Printf("Login failed for user %s: %v", username, err)
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			sendAlert(w, "Invalid credentials.")
 			return
 		}
 
@@ -50,14 +50,15 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if user.Role != "Client" {
-			http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+			sendAlert(w, "Invalid Credentials.")
 			return
 		}
+
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenString, err := token.SignedString(jwtKey)
 		if err != nil {
 			log.Printf("Error generating token for user %s: %v", username, err)
-			http.Error(w, "Error generating token", http.StatusInternalServerError)
+			sendAlert(w, "Error generating token.")
 			return
 		}
 
@@ -78,7 +79,7 @@ func SignupPage(w http.ResponseWriter, r *http.Request) {
 		tmpl := views.Signup()
 		err := tmpl.ExecuteTemplate(w, "base", nil)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			sendAlert(w, "Error loading page. Please try again.")
 		}
 		return
 	}
@@ -87,9 +88,15 @@ func SignupPage(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("name")
 		password := r.FormValue("password")
 
+		// Validate the password length
+		if len(password) < 5 {
+			sendAlert(w, "Password must be at least 5 characters.")
+			return
+		}
+
 		err := models.Signup(username, password)
 		if err != nil {
-			http.Error(w, "Error signing up user: "+err.Error(), http.StatusInternalServerError)
+			sendAlert(w, "Error signing up user: "+err.Error())
 			return
 		}
 
@@ -102,8 +109,8 @@ func AdminLoginPage(w http.ResponseWriter, r *http.Request) {
 		tmpl := views.AdminLogin()
 		err := tmpl.ExecuteTemplate(w, "base", nil)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Printf("Error executing login template: %v", err)
+			sendAlert(w, "Error loading page. Please try again.")
 		}
 		return
 	}
@@ -117,7 +124,7 @@ func AdminLoginPage(w http.ResponseWriter, r *http.Request) {
 		user, err := models.Login(username, password)
 		if err != nil {
 			log.Printf("Login failed for user %s: %v", username, err)
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			sendAlert(w, "Invalid credentials.")
 			return
 		}
 
@@ -128,27 +135,26 @@ func AdminLoginPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if user.Role != "Admin" {
-			http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+			sendAlert(w, "Invalid Credentials.")
 			return
 		}
+
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenString, err := token.SignedString(jwtKey)
 		if err != nil {
 			log.Printf("Error generating token for user %s: %v", username, err)
-			http.Error(w, "Error generating token", http.StatusInternalServerError)
+			sendAlert(w, "Error generating token.")
 			return
 		}
 
 		log.Printf("Login successful for user: %s", username)
 
-		// Set token as cookie
 		http.SetCookie(w, &http.Cookie{
 			Name:  "token",
 			Value: tokenString,
 			Path:  "/", // Path to set cookie on
 		})
 
-		// Redirect user after successful login
 		http.Redirect(w, r, "/admin", http.StatusFound)
 	}
 }

@@ -1,13 +1,11 @@
 package controller
 
 import (
-	// "encoding/json"
-
+	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
-
+	"log"
 	"github.com/ayu-ch/SDSLib/pkg/models"
 	"github.com/ayu-ch/SDSLib/pkg/types"
 	"github.com/ayu-ch/SDSLib/pkg/views"
@@ -28,7 +26,7 @@ func AddBookPage(w http.ResponseWriter, r *http.Request) {
 		// Convert quantity to int
 		quantityInt, err := strconv.Atoi(quantity)
 		if err != nil {
-			http.Error(w, "Invalid quantity", http.StatusBadRequest)
+			sendAlert(w, "Invalid quantity")
 			return
 		}
 
@@ -41,7 +39,7 @@ func AddBookPage(w http.ResponseWriter, r *http.Request) {
 
 		err = models.AddBook(book)
 		if err != nil {
-			http.Error(w, "Failed to add book", http.StatusInternalServerError)
+			sendAlert(w, "Failed to add book")
 			return
 		}
 
@@ -54,7 +52,7 @@ func BooksPage(w http.ResponseWriter, r *http.Request) {
 
 	books, err := models.FetchBooks()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		sendAlert(w, err.Error())
 		return
 	}
 
@@ -66,22 +64,20 @@ func BooksPage(w http.ResponseWriter, r *http.Request) {
 
 	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		sendAlert(w, err.Error())
 	}
 }
 
 func AcceptRequestsPage(w http.ResponseWriter, r *http.Request) {
 	requests, err := models.GetPendingRequests()
 	if err != nil {
-		log.Printf("Error fetching pending requests: %s", err)
-		http.Error(w, "Error fetching pending requests", http.StatusInternalServerError)
+		sendAlert(w, "Error fetching pending requests")
 		return
 	}
 
 	err = views.AcceptRequests(w, requests)
 	if err != nil {
-		log.Printf("Error rendering template: %s", err)
-		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+		sendAlert(w, "Error rendering template")
 		return
 	}
 }
@@ -91,8 +87,7 @@ func AcceptRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := models.Connection()
 	if err != nil {
-		log.Printf("Error connecting to the database: %s", err)
-		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+		sendAlert(w, "Error connecting to the database")
 		return
 	}
 	defer db.Close()
@@ -100,8 +95,7 @@ func AcceptRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// Update request status to 'Accepted' and set AcceptDate
 	_, err = db.Exec("UPDATE BookRequests SET Status='Accepted', AcceptDate = NOW() WHERE RequestID=?", requestID)
 	if err != nil {
-		log.Printf("Error updating request status: %s", err)
-		http.Error(w, "Error updating request status", http.StatusInternalServerError)
+		sendAlert(w, "Error updating request status")
 		return
 	}
 
@@ -109,16 +103,14 @@ func AcceptRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var bookID int
 	err = db.QueryRow("SELECT BookID FROM BookRequests WHERE RequestID = ?", requestID).Scan(&bookID)
 	if err != nil {
-		log.Printf("Error retrieving BookID: %s", err)
-		http.Error(w, "Error retrieving BookID", http.StatusInternalServerError)
+		sendAlert(w, "Error retrieving BookID")
 		return
 	}
 
 	// Update Books quantity (decrease by 1)
 	_, err = db.Exec("UPDATE Books SET Quantity = Quantity - 1 WHERE BookID=?", bookID)
 	if err != nil {
-		log.Printf("Error updating book quantity: %s", err)
-		http.Error(w, "Error updating book quantity", http.StatusInternalServerError)
+		sendAlert(w, "Error updating book quantity")
 		return
 	}
 
@@ -130,18 +122,70 @@ func DenyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := models.Connection()
 	if err != nil {
-		log.Printf("Error connecting to the database: %s", err)
-		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+		sendAlert(w, "Error connecting to the database")
 		return
 	}
 	defer db.Close()
 
 	_, err = db.Exec("UPDATE BookRequests SET Status='Denied' WHERE RequestID=?", requestID)
 	if err != nil {
-		log.Printf("Error updating request status: %s", err)
-		http.Error(w, "Error updating request status", http.StatusInternalServerError)
+		sendAlert(w, "Error updating request status")
 		return
 	}
 
 	http.Redirect(w, r, "/admin/requests", http.StatusSeeOther)
+}
+
+func UpdateBooksPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		books, err := models.FetchBooks()
+		if err != nil {
+			sendAlert(w, "Failed to fetch books")
+			return
+		}
+
+		err = views.UpdateBooks(w, books) 
+		if err != nil {
+			sendAlert(w, "Failed to render update page")
+			return
+		}
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		r.ParseForm()
+		log.Printf("Form Values: %v", r.PostForm)
+
+		bookIDs := r.Form["bookIDs[]"]
+
+		quantityMap := make(map[string]string)
+
+		for _, bookID := range bookIDs {
+			quantityKey := fmt.Sprintf("quantities[%s]", bookID)
+
+			quantity := r.FormValue(quantityKey)
+
+			if quantity != "" {
+				quantityMap[bookID] = quantity
+			} else {
+				sendAlert(w, fmt.Sprintf("Missing quantity for book ID %s", bookID))
+				return
+			}
+		}
+
+		if len(quantityMap) != len(bookIDs) {
+			sendAlert(w, "Mismatch between book IDs and quantities")
+			return
+		}
+
+		log.Printf("Final quantityMap: %v", quantityMap)
+
+		err := models.UpdateBooksQuantity(bookIDs, quantityMap)
+		if err != nil {
+			sendAlert(w, fmt.Sprintf("Failed to update books: %s", err))
+			return
+		}
+
+		http.Redirect(w, r, "/admin/books/list", http.StatusSeeOther)
+	}
 }

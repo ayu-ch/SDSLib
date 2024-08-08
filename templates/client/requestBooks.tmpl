@@ -5,7 +5,7 @@
 <div class="bg-[#f1faee] max-w-7xl p-6 mx-auto rounded-lg my-12">
   <h1 class="text-5xl text-center font-extrabold text-[#e63946]">Request a Book</h1>
   <h2 class="mt-6 text-2xl text-center font-extrabold text-[#1d3557] pb-10">Select books</h2>
-  <form action="/home/request" method="POST" class="text-center">
+  <form action="/request" method="POST" class="text-center">
     <ul>
       {{range .Books}}
         <li>
@@ -24,7 +24,7 @@
   <h1 class="absolute top-0 left-0 pl-4 mt-4 mr-4 text-4xl font-bold text-[#1d3557]"><a href="/home">SDSLib</a></h1>
 </div>
 <script>
-  fetch('/home/request', {
+  fetch('/request', {
     method: 'POST'
   })
   .then(response => {

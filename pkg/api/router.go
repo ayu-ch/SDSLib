@@ -16,12 +16,12 @@ func Start() {
 	http.HandleFunc("/logout", controller.Logout)
 
 	http.Handle("/home", middleware.IsLoggedIn(http.HandlerFunc(controller.HomePage)))
-	http.Handle("/home/request", middleware.IsLoggedIn(http.HandlerFunc(controller.AddBookRequest)))
-	http.Handle("/home/requests", middleware.IsLoggedIn(http.HandlerFunc(controller.Requests)))
-	http.Handle("/home/requestAdmin", middleware.IsLoggedIn(http.HandlerFunc(controller.RequestAdmin)))
-	http.Handle("/home/books", middleware.IsLoggedIn(http.HandlerFunc(controller.AcceptedBooks)))
-	http.Handle("/home/return", middleware.IsLoggedIn(http.HandlerFunc(controller.ReturnBooksPage)))
-	http.Handle("/home/borrowHistory", middleware.IsLoggedIn(http.HandlerFunc(controller.BorrowHistoryHandler)))
+	http.Handle("/request", middleware.IsLoggedIn(http.HandlerFunc(controller.AddBookRequest)))
+	http.Handle("/requests", middleware.IsLoggedIn(http.HandlerFunc(controller.Requests)))
+	http.Handle("/requestAdmin", middleware.IsLoggedIn(http.HandlerFunc(controller.RequestAdmin)))
+	http.Handle("/books", middleware.IsLoggedIn(http.HandlerFunc(controller.AcceptedBooks)))
+	http.Handle("/return", middleware.IsLoggedIn(http.HandlerFunc(controller.ReturnBooksPage)))
+	http.Handle("/borrowHistory", middleware.IsLoggedIn(http.HandlerFunc(controller.BorrowHistoryHandler)))
 
 	http.Handle("/admin", middleware.IsAdmin(http.HandlerFunc(controller.AdminPortal)))
 
@@ -36,6 +36,7 @@ func Start() {
 	http.Handle("/admin/books", middleware.IsAdmin(http.HandlerFunc(controller.ManageBooksPage)))
 	http.Handle("/admin/books/list", middleware.IsAdmin(http.HandlerFunc(controller.BooksPage)))
 	http.Handle("/admin/books/add", middleware.IsAdmin(http.HandlerFunc(controller.AddBookPage)))
+	http.Handle("/admin/books/update", middleware.IsAdmin(http.HandlerFunc(controller.UpdateBooksPage)))
 
 	fmt.Println("Starting server on :8000")
 	http.ListenAndServe(":8000", nil)

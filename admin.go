@@ -12,10 +12,10 @@ import (
 )
 
 func main() {
-	dbUsername := os.Getenv("DB_USERNAME")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbHost := os.Getenv("DB_HOST")
-	dbName := os.Getenv("DB_NAME")
+	dbUsername := "root"
+	dbPassword := "Physics@1504"
+	dbHost := "localhost"
+	dbName := "Library"
 
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUsername, dbPassword, dbHost, dbName))
 	if err != nil {
@@ -24,7 +24,6 @@ func main() {
 	defer db.Close()
 
 	adminUsername := os.Args[1]
-
 	adminPassword := os.Args[2]
 
 	adminUsername = strings.TrimSpace(adminUsername)

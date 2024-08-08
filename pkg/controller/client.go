@@ -14,14 +14,30 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	tmpl := views.Home(nil)
 	err := tmpl.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		sendAlert(w, fmt.Sprintf("Error executing template: %s", err))
 	}
+}
+
+func sendAlert(w http.ResponseWriter, message string) {
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprintf(w, `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<script type="text/javascript">
+				alert("%s");
+				window.history.back();
+			</script>
+		</head>
+		<body></body>
+		</html>
+	`, message)
 }
 
 func Requests(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
-		http.Error(w, "Cookie not found", http.StatusUnauthorized)
+		sendAlert(w, "Cookie not found")
 		return
 	}
 	tokenString := cookie.Value
@@ -30,7 +46,7 @@ func Requests(w http.ResponseWriter, r *http.Request) {
 		return jwtKey, nil
 	})
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendAlert(w, "Unauthorized")
 		return
 	}
 
@@ -39,7 +55,7 @@ func Requests(w http.ResponseWriter, r *http.Request) {
 
 		requests, err := models.GetRequestsByUserID(userID)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error fetching requests: %s", err), http.StatusInternalServerError)
+			sendAlert(w, fmt.Sprintf("Error fetching requests: %s", err))
 			return
 		}
 
@@ -51,21 +67,21 @@ func Requests(w http.ResponseWriter, r *http.Request) {
 
 			books, err := models.GetBooksByIDsWithStatus(userID, bookIDs)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error fetching books with status: %s", err), http.StatusInternalServerError)
+				sendAlert(w, fmt.Sprintf("Error fetching books with status: %s", err))
 				return
 			}
 
 			tmpl := views.RequestsPage(books)
 			err = tmpl.ExecuteTemplate(w, "base", books)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("error executing template: %s", err), http.StatusInternalServerError)
+				sendAlert(w, fmt.Sprintf("Error executing template: %s", err))
 				return
 			}
 		} else {
 			fmt.Fprintf(w, "You do not have any requests yet")
 		}
 	} else {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendAlert(w, "Unauthorized")
 		return
 	}
 }
@@ -73,7 +89,7 @@ func Requests(w http.ResponseWriter, r *http.Request) {
 func AcceptedBooks(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
-		http.Error(w, "Cookie not found", http.StatusUnauthorized)
+		sendAlert(w, "Cookie not found")
 		return
 	}
 	tokenString := cookie.Value
@@ -82,7 +98,7 @@ func AcceptedBooks(w http.ResponseWriter, r *http.Request) {
 		return jwtKey, nil
 	})
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendAlert(w, "Unauthorized")
 		return
 	}
 
@@ -91,7 +107,7 @@ func AcceptedBooks(w http.ResponseWriter, r *http.Request) {
 
 		requests, err := models.GetAcceptedBooksByID(userID)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error fetching requests: %s", err), http.StatusInternalServerError)
+			sendAlert(w, fmt.Sprintf("Error fetching requests: %s", err))
 			return
 		}
 
@@ -103,41 +119,41 @@ func AcceptedBooks(w http.ResponseWriter, r *http.Request) {
 
 			books, err := models.GetBooksByIDsWithStatus(userID, bookIDs)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error fetching books with status: %s", err), http.StatusInternalServerError)
+				sendAlert(w, fmt.Sprintf("Error fetching books with status: %s", err))
 				return
 			}
 
 			tmpl := views.BooksPage(books)
 			err = tmpl.ExecuteTemplate(w, "base", books)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("error executing template: %s", err), http.StatusInternalServerError)
+				sendAlert(w, fmt.Sprintf("Error executing template: %s", err))
 				return
 			}
 		} else {
 			fmt.Fprintf(w, "You do not have any requests yet")
 		}
 	} else {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendAlert(w, "Unauthorized")
 		return
 	}
 }
 
 func RequestAdmin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		sendAlert(w, "Invalid request method")
 		return
 	}
 
 	db, err := models.Connection()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error connecting to the database: %s", err), http.StatusInternalServerError)
+		sendAlert(w, fmt.Sprintf("Error connecting to the database: %s", err))
 		return
 	}
 	defer db.Close()
 
 	cookie, err := r.Cookie("token")
 	if err != nil {
-		http.Error(w, "Cookie not found", http.StatusUnauthorized)
+		sendAlert(w, "Cookie not found")
 		return
 	}
 	tokenString := cookie.Value
@@ -146,7 +162,7 @@ func RequestAdmin(w http.ResponseWriter, r *http.Request) {
 		return jwtKey, nil
 	})
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendAlert(w, "Unauthorized")
 		return
 	}
 
@@ -155,14 +171,16 @@ func RequestAdmin(w http.ResponseWriter, r *http.Request) {
 
 		err = db.QueryRow("SELECT UserID FROM User WHERE Username = ?", claims.Username).Scan(&userID)
 		if err != nil {
-			http.Error(w, "User not found", http.StatusInternalServerError)
+			sendAlert(w, "User not found")
 			return
 		}
 
 		_, err = db.Exec("UPDATE User SET AdminRequest = 'Pending' WHERE UserID = ?", userID)
 		if err != nil {
-			http.Error(w, "Failed to update user", http.StatusInternalServerError)
+			sendAlert(w, "Failed to update user")
 			return
+		}else{
+			sendAlert(w,"Request Sent!")
 		}
 	}
 }
@@ -172,7 +190,7 @@ func AddBookRequest(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		books, err := models.FetchBooks()
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error fetching books: %s", err), http.StatusInternalServerError)
+			sendAlert(w, fmt.Sprintf("Error fetching books: %s", err))
 			return
 		}
 
@@ -181,7 +199,7 @@ func AddBookRequest(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		cookie, err := r.Cookie("token")
 		if err != nil {
-			http.Error(w, "Cookie not found", http.StatusUnauthorized)
+			sendAlert(w, "Cookie not found")
 			return
 		}
 		tokenString := cookie.Value
@@ -190,7 +208,7 @@ func AddBookRequest(w http.ResponseWriter, r *http.Request) {
 			return jwtKey, nil
 		})
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			sendAlert(w, "Unauthorized")
 			return
 		}
 
@@ -199,7 +217,7 @@ func AddBookRequest(w http.ResponseWriter, r *http.Request) {
 
 			err := r.ParseForm()
 			if err != nil {
-				http.Error(w, "Error parsing form", http.StatusBadRequest)
+				sendAlert(w, "Error parsing form")
 				return
 			}
 
@@ -207,7 +225,7 @@ func AddBookRequest(w http.ResponseWriter, r *http.Request) {
 			for _, v := range r.Form["selectedBooks"] {
 				bookID, err := strconv.Atoi(v)
 				if err != nil {
-					http.Error(w, "Invalid book ID", http.StatusBadRequest)
+					sendAlert(w, "Invalid book ID")
 					return
 				}
 				bookIDs = append(bookIDs, bookID)
@@ -215,18 +233,18 @@ func AddBookRequest(w http.ResponseWriter, r *http.Request) {
 
 			err = models.AddBookRequests(userID, bookIDs)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error adding book requests: %s", err), http.StatusInternalServerError)
+				sendAlert(w, fmt.Sprintf("Error adding book requests: %s", err))
 				return
 			}
 
-			http.Redirect(w, r, "/home/requests", http.StatusSeeOther)
+			http.Redirect(w, r, "/requests", http.StatusSeeOther)
 		} else {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			sendAlert(w, "Unauthorized")
 			return
 		}
 
 	default:
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		sendAlert(w, "Invalid request method")
 	}
 }
 
@@ -235,7 +253,7 @@ func ReturnBooksPage(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		cookie, err := r.Cookie("token")
 		if err != nil {
-			http.Error(w, "Cookie not found", http.StatusUnauthorized)
+			sendAlert(w, "Cookie not found")
 			return
 		}
 		tokenString := cookie.Value
@@ -244,7 +262,7 @@ func ReturnBooksPage(w http.ResponseWriter, r *http.Request) {
 			return jwtKey, nil
 		})
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			sendAlert(w, "Unauthorized")
 			return
 		}
 
@@ -252,18 +270,18 @@ func ReturnBooksPage(w http.ResponseWriter, r *http.Request) {
 			userID := claims.UserID
 			requests, err := models.GetReturnableBooks(userID)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error fetching returnable books: %s", err), http.StatusInternalServerError)
+				sendAlert(w, fmt.Sprintf("Error fetching returnable books: %s", err))
 				return
 			}
 			views.RenderReturnBooks(w, requests)
 		} else {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			sendAlert(w, "Unauthorized")
 		}
 
 	case http.MethodPost:
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Error parsing form", http.StatusBadRequest)
+			sendAlert(w, "Error parsing form")
 			return
 		}
 
@@ -271,7 +289,7 @@ func ReturnBooksPage(w http.ResponseWriter, r *http.Request) {
 		for _, v := range r.Form["selectedRequests"] {
 			requestID, err := strconv.Atoi(v)
 			if err != nil {
-				http.Error(w, "Invalid request ID", http.StatusBadRequest)
+				sendAlert(w, "Invalid request ID")
 				return
 			}
 			selectedRequests = append(selectedRequests, requestID)
@@ -279,21 +297,21 @@ func ReturnBooksPage(w http.ResponseWriter, r *http.Request) {
 
 		err = models.ReturnBooks(selectedRequests)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error returning books: %s", err), http.StatusInternalServerError)
+			sendAlert(w, fmt.Sprintf("Error returning books: %s", err))
 			return
 		}
 
-		http.Redirect(w, r, "/home/requests", http.StatusSeeOther)
+		http.Redirect(w, r, "/requests", http.StatusSeeOther)
 
 	default:
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		sendAlert(w, "Invalid request method")
 	}
 }
 
 func BorrowHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
-		http.Error(w, "Cookie not found", http.StatusUnauthorized)
+		sendAlert(w, "Cookie not found")
 		return
 	}
 	tokenString := cookie.Value
@@ -302,7 +320,7 @@ func BorrowHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return jwtKey, nil
 	})
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendAlert(w, "Unauthorized")
 		return
 	}
 
@@ -310,7 +328,7 @@ func BorrowHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		userID := claims.UserID
 		history, err := models.GetBorrowingHistory(userID)
 		if err != nil {
-			http.Error(w, "Error fetching borrowing history", http.StatusInternalServerError)
+			sendAlert(w, "Error fetching borrowing history")
 			return
 		}
 

@@ -2,8 +2,12 @@ package models
 
 import (
 	"fmt"
-
+	"strconv"
+	// "strings"
+	"database/sql"
+	"log"
 	"github.com/ayu-ch/SDSLib/pkg/types"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func AddBook(book types.Books) error {
@@ -13,6 +17,16 @@ func AddBook(book types.Books) error {
 	}
 	defer db.Close()
 
+	// Check if the book already exists
+	exists, err := bookExists(db, book.Title)
+	if err != nil {
+		return fmt.Errorf("error checking if book exists: %s", err)
+	}
+	if exists {
+		return fmt.Errorf("a book with the title '%s' already exists", book.Title)
+	}
+
+	// Insert the new book
 	query := "INSERT INTO Books (Title, Author, Genre, Quantity) VALUES (?, ?, ?, ?)"
 	_, err = db.Exec(query, book.Title, book.Author, book.Genre, book.Quantity)
 	if err != nil {
@@ -20,6 +34,17 @@ func AddBook(book types.Books) error {
 	}
 
 	return nil
+}
+
+func bookExists(db *sql.DB, title string) (bool, error) {
+	query := "SELECT COUNT(*) FROM Books WHERE Title = ?"
+	var count int
+	err := db.QueryRow(query, title).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	log.Printf("count %s",count)
+	return count > 0, nil
 }
 
 func FetchBooks() ([]types.Books, error) {
@@ -146,3 +171,32 @@ func FetchUsers() ([]types.User, error) {
 
 	return users, nil
 }
+
+func UpdateBooksQuantity(bookIDs []string, quantities map[string]string) error {
+	db, err := Connection()
+	if err != nil {
+		return fmt.Errorf("error connecting to the database: %s", err)
+	}
+	defer db.Close()
+	log.Printf("%s",bookIDs)
+	for _, bookID := range bookIDs {
+		quantityStr, ok := quantities[bookID]
+		if !ok {
+			return fmt.Errorf("missing quantity for book ID %s", bookID)
+		}
+
+		quantity, err := strconv.Atoi(quantityStr)
+		if err != nil {
+			return fmt.Errorf("invalid quantity value for book ID %s: %s", bookID, err)
+		}
+
+		query := "UPDATE Books SET Quantity = ? WHERE BookID = ?"
+		_, err = db.Exec(query, quantity, bookID)
+		if err != nil {
+			return fmt.Errorf("error updating book ID %s: %s", bookID, err)
+		}
+	}
+
+	return nil
+}
+
